@@ -25,7 +25,7 @@ http://www.chizl.com/ansible/
 
 -=[ INTERNAL COMMANDS ]=-
 
-		about:                        Displays information about Linux Commander and the Linux host your
+	  about:                        Sets [set-local] path back to temp direcotry.
 	                                connected to.
 	                                e.g. about
 	  ---------------------------------------------------------------------------

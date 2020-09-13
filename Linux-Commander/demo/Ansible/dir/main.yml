@@ -1,0 +1,45 @@
+---
+- name: Check if directory is in whitelist path
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    dir: "/toto/chizl/dir1"
+    my_param: 101
+    whitelist_dir:
+      - "/local/web/"
+      - "/toto/chizl/"
+
+  tasks:
+    - name: Validate Search {{ dir }}
+      debug:
+        msg: "directory is good"
+      when: dir is search(item)
+      with_items:
+        - "{{ whitelist_dir }}"
+
+    - fail:
+        msg: "Directory root must be: {{ item }}"
+      when: not dir|string|regex_search(item)
+      with_items:
+        - "{{ whitelist_dir }}"
+      ignore_errors: yes
+
+    - name: Assert Validate Search {{ dir }}
+      assert:
+        that:
+          - dir is search(item)
+        fail_msg: "'{{ dir }}' failed to be found"
+        success_msg: "'{{ dir }}' is found"
+      with_items:
+        - "{{ whitelist_dir }}"
+      ignore_errors: yes
+
+    - name: Assert test
+      assert:
+        that:
+          - my_param <= 100
+          - my_param >= 0
+        success_msg: "my_param '{{ my_param }}' is between 0 and 100"
+        fail_msg: "my_param '{{ my_param }}' must be between 0 and 100"
+      ignore_errors: yes

@@ -1,0 +1,21 @@
+---
+- name: Check if directory is in whitelist path
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    dir: "/toto/chizl/dir1"
+    whitelist_dir:
+      - "/local/web/"
+      - "/toto/chizl/"
+
+  tasks:
+    - debug:
+        msg: "Directory root must be: {{ dir }}"
+
+    - name: Validate Search {{ dir }}
+      debug:
+        msg: "directory is good"
+      when: dir is search(item)
+      with_items:
+        - "{{ whitelist_dir }}"

@@ -1,0 +1,18 @@
+﻿---
+- name: Show how Prompts work.
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+
+    - name: firstname
+      prompt: "What is your first name?"
+      private: no
+
+    - name: lastname
+      prompt: "What is your last name?"
+      private: no
+
+  tasks:
+
+    - debug:
+        msg: 'Your full name is {{ firstname }} {{ lastname }}.'

@@ -1,0 +1,18 @@
+---
+- name: Check if WhiteListing
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    dir: "/tmp/chizl/dir1"
+    wl_dir: "/tmp/"
+
+  tasks:
+    - fail:
+        msg: "Directory root must be: {{ wl_dir }}"
+      when: not dir|string|regex_search(wl_dir)
+
+    - name: Validated {{ dir }}
+      debug:
+        msg: "directory is good"
+      when: dir|string|regex_search(wl_dir)

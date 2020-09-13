@@ -2,20 +2,23 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Software was written in Visual Studio 2019, but is also pulled and ran under Visual Studio 2017 without issues.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version         | Version  | Supported          |
+| --------------- | -------- | ------------------ |
+| Visual Studio   | 2017     | :white_check_mark: |
+| Visual Studio   | 2019     | :white_check_mark: |
+| .NET Framework  | 4.6.1    | :white_check_mark: |
+| Newtonsoft.Json | 12.0.3   | :white_check_mark: |
+| SSH.NET         | 2016.1.0 | :white_check_mark: |
+| PSCP            | 0.74.0.0 | :white_check_mark: |
+
+## Latest version of PSCP can be found at the creators website:
+https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html
 
 ## Reporting a Vulnerability
+This is a standalong applicaiton so there shouldn't be vulnerabilities as nothing connects to it.   
 
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+## Reporting an Issue
+If you run into any issues please to here and submit your issue and someone will attempt help or results the problem as soon as they can.
+https://github.com/gavin1970/Linux-Commander/issues

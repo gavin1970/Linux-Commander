@@ -341,7 +341,7 @@ namespace Linux_Commander.common
                 {
                     FileName = "pscp",
                     RedirectStandardInput = true,
-                    RedirectStandardOutput = false,
+                    RedirectStandardOutput = true,
                     Arguments = $"-r -p -pw {Defs.PassWord} {remote} \"{local}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -351,7 +351,7 @@ namespace Linux_Commander.common
                 {
                     FileName = "pscp",
                     RedirectStandardInput = true,
-                    RedirectStandardOutput = false,
+                    RedirectStandardOutput = true,
                     Arguments = $"-r -p -pw {Defs.PassWord} \"{local}\" {remote}",
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -367,12 +367,14 @@ namespace Linux_Commander.common
                     CreateNoWindow = true
                 };
 
+                Log.Verbose($"Downloading file..");
                 using (Process process = new Process())
                 {
                     process.StartInfo = getPSI;
                     process.Start();
                     process.StandardInput.WriteLine("Y");
                     process.WaitForExit();
+                    Log.Verbose($"{process.StandardOutput.ReadToEnd()}");
                 }
 
                 using (Process process = new Process())
@@ -382,17 +384,56 @@ namespace Linux_Commander.common
                     process.WaitForExit();
                 }
 
-                using (Process process = new Process())
+                Log.Verbose($"Ready to upload your change to '{Defs.HostNameShort}'? (Y/n): ", ConsoleColor.Yellow, false);
+
+                ConsoleKeyInfo ckiUpload = Console.ReadKey(true);
+                if (ckiUpload.Key == ConsoleKey.Y)
                 {
-                    process.StartInfo = sendPSI;
-                    process.Start();
-                    process.StandardInput.WriteLine("Y");
-                    process.WaitForExit();
+                    //we don't care about case, but we ask for Y, so we show Y.
+                    Log.Verbose(0, "Y");
+                    Log.Verbose($"Uploading file..");
+                    using (Process process = new Process())
+                    {
+                        process.StartInfo = sendPSI;
+                        process.Start();
+                        process.StandardInput.WriteLine("Y");
+                        process.WaitForExit();
+                        Log.Verbose($"{process.StandardOutput.ReadToEnd()}");
+                    }
+                }
+                else
+                {
+                    //we don't care what key was pressed as long as it wasn't Y, so we show n.
+                    Log.Verbose(0, "n");
+                    Log.Verbose($"Upload Skipped...");
                 }
 
-                if (File.Exists(local))
-                    File.Delete(local);
+                Log.Verbose("");
 
+                if (File.Exists(local))
+                {
+                    Log.Verbose($"Do you want to delete the local file? (Y/n): ", ConsoleColor.Yellow, false);
+
+                    ConsoleKeyInfo ckiDelete = Console.ReadKey(true);
+                    if (ckiDelete.Key == ConsoleKey.Y)
+                    {
+                        //we don't care about case, but we ask for Y, so we show Y.
+                        Log.Verbose(0, "Y");
+                        File.Delete(local);
+                        if (File.Exists(local))
+                            Log.Verbose($"Failed to delete: {local}");
+                        else
+                            Log.Verbose("Delete Successful.");
+                    }
+                    else
+                    {
+                        //we don't care what key was pressed as long as it wasn't Y, so we show n.
+                        Log.Verbose(0, "n");
+                        Log.Verbose($"Delete Skipped...");
+                    }
+                }
+
+                Log.Verbose("");
                 retVal = true;
             }
             catch (Exception ex)

@@ -18,8 +18,8 @@ namespace Linux_Commander.common
         //  what is your name?
         //  [root@localhost ~]#
         //  [root@localhost ~]$
-        const string Command_Prompt_Only = @"[$#]|\[.*@(.*?)\][$%#]"; 
-        const string Command_Prompt_Question = @".*\?:|"+ Command_Prompt_Only;
+        const string Command_Prompt_Only = @"[$#]|\[.*@(.*?)\][$%#]";
+        const string Command_Prompt_Question = @".*\?:|" + Command_Prompt_Only;
         private object _sendLock = new object();
 
         private static DataTable _dataTranslation { get; set; } = null;
@@ -58,7 +58,7 @@ namespace Linux_Commander.common
                 return;
             }
 
-            if(_dataTranslation == null)
+            if (_dataTranslation == null)
                 DataFiles.GetTranslationData();
 
             //change to the remote directory
@@ -148,7 +148,7 @@ namespace Linux_Commander.common
 
             foreach (string s in host)
             {
-                if(!string.IsNullOrWhiteSpace(s) && s.IndexOf("Static hostname:")>-1)
+                if (!string.IsNullOrWhiteSpace(s) && s.IndexOf("Static hostname:") > -1)
                 {
                     Defs.HostName = s.Split(':')[1].Trim();
                     break;
@@ -233,7 +233,7 @@ namespace Linux_Commander.common
 
                     //Don't set prompt if still showing message.
                     if (string.Join("/", remote).Trim().Length < 40 && remote.Length <= 3)
-                        Defs.PromptsRemoteDir = remote[remote.Length-1].Trim();
+                        Defs.PromptsRemoteDir = remote[remote.Length - 1].Trim();
 
                     //if default Remote Path not setup, give it the current folder.  don't set remote path if still showing message.
                     if (Defs.RemotePath.Equals("/") && string.Join("/", remote).Trim().Length < 40 && remote.Length <= 3)
@@ -245,7 +245,7 @@ namespace Linux_Commander.common
 
                     //let the user know what we are doing.
                     Log.Verbose("Successful Connection Established...\n", ConsoleColor.Green);
-                    
+
                     //set the current folder as local path 
                     Directory.SetCurrentDirectory(Defs.LocalPath);
                     Console.Title = $"{Defs.ConsoleTitle}     -=[{Defs.UserName}@{Defs.HostName}]=-";
@@ -380,12 +380,17 @@ namespace Linux_Commander.common
             }
 
             //keeping track of existing remote folder.
-            if(pwd)
+            if (pwd)
             {
                 bool prevDisplayRessults = displayResults;
                 string prevDataContent = Defs.DataContent.ToString();
                 SendCommand("pwd", false);
                 Defs.CurrentRemotePath = Defs.DataContent.ToString().Replace("\n", "").Replace("\r", "").Trim();
+
+                //legacy linux
+                if (Defs.CurrentRemotePath.EndsWith("$"))
+                    Defs.CurrentRemotePath = Defs.CurrentRemotePath.Substring(0, Defs.CurrentRemotePath.Length - 1);
+
                 Defs.DataContent.Clear();
                 Defs.DataContent.Append(prevDataContent);
                 _displayResults = prevDisplayRessults;
@@ -422,13 +427,8 @@ namespace Linux_Commander.common
             {
                 //make sure file name is passed.
                 if (command.Length > 1)
-                {
                     //download, open in editor, then upload back to where it came from.
                     Processor.EditFile(command[1]);
-                    //show directory listing.
-                    _lastCommand = "ls -ltr";
-                    callExecute = true;
-                }
             }
             else if (command[0].Equals("edit-config"))
             {
@@ -716,7 +716,7 @@ namespace Linux_Commander.common
             if (Defs.LocalPath.Length > 3 && Defs.RemotePath.Length > 1)
             {
                 //upload set-local to set-remote folder.
-                if(Processor.SendDirectory(Defs.LocalPath, Defs.RemotePath, true))
+                if (Processor.SendDirectory(Defs.LocalPath, Defs.RemotePath, true))
                 {
                     //set permissions to rwxr-xr-x
                     SendCommand($"chmod 755 -R {Defs.RemotePath}", false);
@@ -896,7 +896,8 @@ namespace Linux_Commander.common
                         {
                             Defs.UserServer = match.ToString();
                             output = output.Replace(Defs.UserServer, "");
-                        } else if (match.ToString().Contains("?"))
+                        }
+                        else if (match.ToString().Contains("?"))
                             Log.IsPrompt = true;
                     }
 
@@ -906,7 +907,7 @@ namespace Linux_Commander.common
                     string regPattern = @"(.)\1{" + maxSize.ToString() + ",}";
 
                     var repeatedChar = Regex.Matches(output, regPattern);
-                    foreach(Match match in repeatedChar)
+                    foreach (Match match in repeatedChar)
                     {
                         string captured = match.ToString();
                         char[] bytes = captured.ToCharArray();

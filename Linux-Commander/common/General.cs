@@ -43,6 +43,25 @@ namespace Linux_Commander.common
             }
         }
 
+        internal static string GetTzAbbreviation(string timeZoneName)
+        {
+            string output = string.Empty;
+
+            string[] timeZoneWords = timeZoneName.Split(' ');
+            foreach (string timeZoneWord in timeZoneWords)
+            {
+                if (timeZoneWord[0] != '(')
+                {
+                    output += timeZoneWord[0];
+                }
+                else
+                {
+                    output += timeZoneWord;
+                }
+            }
+            return output;
+        }
+
         /// <summary>
         /// Display the application header text
         /// </summary>

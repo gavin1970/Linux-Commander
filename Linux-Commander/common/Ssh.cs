@@ -19,7 +19,8 @@ namespace Linux_Commander.common
         //  [root@localhost ~]#
         //  [root@localhost ~]$
         const string Command_Prompt_Only = @"[$#]|\[.*@(.*?)\][$%#]";
-        const string Command_Prompt_Question = @".*\?:|" + Command_Prompt_Only;
+        const string Command_Question_Only = @".*\?:|.*\[y/N\]/g";
+        const string Command_Prompt_Question = Command_Question_Only + "|" + Command_Prompt_Only;
         private object _sendLock = new object();
 
         private static DataTable _dataTranslation { get; set; } = null;
@@ -85,7 +86,7 @@ namespace Linux_Commander.common
 
                     Log.Verbose($"[{Defs.UserName}@{Defs.HostNameShort} {Defs.PromptsRemoteDir}]$ ", Log.Prompt, false);
                 }
-                else if (!Log.IsPrompt)
+                else if (!Log.IsInputRequest)
                     Log.Verbose($"{Defs.UserServer} ", Log.Prompt, false);
 
                 _lastCommand = Console.ReadLine();
@@ -121,7 +122,7 @@ namespace Linux_Commander.common
                             break;
                         default:
                             if (ExtendedCommands())
-                                SendCommand(_lastCommand);
+                                SendCommand(_lastCommand, !Log.IsInputRequest);
                             break;
                     }
                 }
@@ -474,8 +475,68 @@ namespace Linux_Commander.common
             {
                 //set the remote linux machine date/time to the same as your local windows machine.
                 callExecute = true;
+
+                bool isDST = TimeZone.CurrentTimeZone.IsDaylightSavingTime(DateTime.Now);
+                string stTimeZoneName = TimeZone.CurrentTimeZone.StandardName;
+
+                //this all works for standards in states, but there are states like Arizona that do not follow the standards.
+                TimeSpan timeZoneDiff = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now).Add(isDST ? TimeSpan.FromHours(-1) : TimeSpan.FromHours(0));
+
+                //build out an abbr, though might not be 100%.  This isn't something we can create out for every timezone, since Linux uses differnt names than actual timezome abbr.
+                string timeZoneAbbrev = General.GetTzAbbreviation(stTimeZoneName);
+
+                if (isDST)
+                {
+                    string dstTimeZoneName = TimeZone.CurrentTimeZone.DaylightName;
+                    double hours = timeZoneDiff.TotalHours;
+                    string dstTimeZoneAbbrev = General.GetTzAbbreviation(dstTimeZoneName);
+
+                    timeZoneAbbrev += Math.Abs(hours).ToString();
+                    timeZoneAbbrev += dstTimeZoneAbbrev;
+                }
+
+                //USA Only, Not sure how to handle DST with other countries as Linux doesn't seem to hold all that info correctly.
+                //find /usr/share/zoneinfo/EST*
+                //PST8PDT
+                //MST
+                //MST7MDT
+                //CST6CDT
+                //EST
+                //EST5EDT
+                //sudo timedatectl set-timezone EST
+                //sudo timedatectl set-timezone EST5EDT
+
+                //may fail as linux has some odd ways of setting DST.
+                _lastCommand = $"sudo timedatectl set-timezone {timeZoneAbbrev}";
+                SendCommand(_lastCommand, false);
+
+                _lastCommand = "timedatectl set-ntp true";
+                SendCommand(_lastCommand);
+
                 string date = DateTime.Now.ToString("dd MMM yyyy HH:mm:ss");
                 _lastCommand = $"date -s \"{date}\"";
+
+              /*
+                //I've commented this all out as even after filling out prompts, it never gets a response that it ended.
+                string aboutServer = GetHostInfo();
+                //tzdata is for Red Hat Linux, this includes CentOS.
+                if (aboutServer.IndexOf("Red Hat", StringComparison.OrdinalIgnoreCase) > -1 || aboutServer.IndexOf("CentOS", StringComparison.OrdinalIgnoreCase) > -1)
+                {
+                    Log.Verbose("The Time Zone Database ( tzdata ) provides Red Hat Enterprise Linux (RHEL) with data that is specific to the local time zone. ... The tzdata package contains data files documenting both current and historic transitions for various time zones around the world.\n", ConsoleColor.Gray, true, false, 75);
+                    Log.Verbose("Would you like to install tzdata on this Linux host? [y/N]: ", ConsoleColor.Yellow, false);
+
+                    ConsoleKeyInfo ckiInstall = Console.ReadKey(true);
+                    if (ckiInstall.Key == ConsoleKey.Y)
+                    {
+                        Log.Verbose("y");
+                        Log.Verbose("There will be a couple of prompts that pop up, Press Y and Enter to continue the install.");
+                        _lastCommand = "yum install tzdata";
+                        //SendCommand(Command_Prompt_Question, _lastCommand, false);
+                        SendCommand(_lastCommand, false);                       
+                    }
+                    else
+                        Log.Verbose("N");
+                }*/
             }
             else if (command[0].Equals("recon"))
             {
@@ -872,6 +933,8 @@ namespace Linux_Commander.common
                 //clear data that might still be in the stream from last time.
                 while (_shellStream.DataAvailable)
                     _shellStream.Read();
+
+                //clear all buffers from underlying device.
                 _shellStream.Flush();
 
                 //straight away 100% works.
@@ -888,7 +951,7 @@ namespace Linux_Commander.common
 
                     //lets look for something specific
                     var matches = Regex.Matches(output, expect);
-                    Log.IsPrompt = false;
+                    Log.IsInputRequest = false;
 
                     foreach (Match match in matches)
                     {
@@ -898,8 +961,12 @@ namespace Linux_Commander.common
                             output = output.Replace(Defs.UserServer, "");
                         }
                         else if (match.ToString().Contains("?"))
-                            Log.IsPrompt = true;
+                            Log.IsInputRequest = true;
                     }
+
+                    var questionPrompt = Regex.Matches(output, Command_Question_Only);
+                    if (questionPrompt.Count > 0)
+                        Log.IsInputRequest = true;
 
                     //looking for a bunch of ******* and trim it down to a max of 75 bytes.
                     //this is something ansible ymls return with the use of ansible-playbook.
@@ -934,9 +1001,6 @@ namespace Linux_Commander.common
 
                     output = "";
                 }
-
-                //clears all buffers, we should be done.
-                _shellStream.Flush();
             }
             catch (Exception ex)
             {

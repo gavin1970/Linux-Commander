@@ -11,7 +11,7 @@ public class Log
     // @ = extended attributes.     xattr -l <filename>
     // <blank> = older versions of Linux don't have anything behind the permissions.
     static List<string> permEnd = new List<string>() { " ", ".", "+", "@" };
-    internal static bool IsPrompt { get; set; } = false;
+    internal static bool IsInputRequest { get; set; } = false;
     internal static ConsoleColor Directories { get; set; } = ConsoleColor.Green;    //default
     internal static ConsoleColor Sticky { get; set; } = ConsoleColor.Cyan;    //default
     internal static ConsoleColor FullPermissionsBG { get; set; } = ConsoleColor.Red;    //default
@@ -212,7 +212,7 @@ public class Log
                     }
                     else
                     {
-                        if (IsPrompt && msg.Contains("?:"))
+                        if (IsInputRequest && msg.Contains("?:"))
                         {
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             lineBreak = false;

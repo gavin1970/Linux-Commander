@@ -384,13 +384,13 @@ namespace Linux_Commander.common
                     process.WaitForExit();
                 }
 
-                Log.Verbose($"Ready to upload your change to '{Defs.HostNameShort}'? (Y/n): ", ConsoleColor.Yellow, false);
+                Log.Verbose($"Ready to upload your change to '{Defs.HostNameShort}'? [y/N]: ", ConsoleColor.Yellow, false);
 
                 ConsoleKeyInfo ckiUpload = Console.ReadKey(true);
                 if (ckiUpload.Key == ConsoleKey.Y)
                 {
                     //we don't care about case, but we ask for Y, so we show Y.
-                    Log.Verbose(0, "Y");
+                    Log.Verbose(0, "y");
                     Log.Verbose($"Uploading file..");
                     using (Process process = new Process())
                     {
@@ -404,7 +404,7 @@ namespace Linux_Commander.common
                 else
                 {
                     //we don't care what key was pressed as long as it wasn't Y, so we show n.
-                    Log.Verbose(0, "n");
+                    Log.Verbose(0, "N");
                     Log.Verbose($"Upload Skipped...");
                 }
 
@@ -412,13 +412,13 @@ namespace Linux_Commander.common
 
                 if (File.Exists(local))
                 {
-                    Log.Verbose($"Do you want to delete the local file? (Y/n): ", ConsoleColor.Yellow, false);
+                    Log.Verbose($"Do you want to delete the local file? [y/N]: ", ConsoleColor.Yellow, false);
 
                     ConsoleKeyInfo ckiDelete = Console.ReadKey(true);
                     if (ckiDelete.Key == ConsoleKey.Y)
                     {
                         //we don't care about case, but we ask for Y, so we show Y.
-                        Log.Verbose(0, "Y");
+                        Log.Verbose(0, "y");
                         File.Delete(local);
                         if (File.Exists(local))
                             Log.Verbose($"Failed to delete: {local}");
@@ -428,7 +428,7 @@ namespace Linux_Commander.common
                     else
                     {
                         //we don't care what key was pressed as long as it wasn't Y, so we show n.
-                        Log.Verbose(0, "n");
+                        Log.Verbose(0, "N");
                         Log.Verbose($"Delete Skipped...");
                     }
                 }

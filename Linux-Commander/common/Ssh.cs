@@ -19,8 +19,8 @@ namespace Linux_Commander.common
         //  [root@localhost ~]#
         //  [root@localhost ~]$
         const string Command_Prompt_Only = @"[$#]|\[.*@(.*?)\][$%#]";
-        const string Command_Question_Only = @".*\?:|.*\[y/N\]/g";
-        const string Command_Prompt_Question = Command_Question_Only + "|" + Command_Prompt_Only;
+        const string Command_Question_Only = @".*\?:|.*\[y/N\]/g|.*\[Y/n\]/g";
+        const string Command_Prompt_Question = "(?:" + Command_Question_Only + ")|(?:" + Command_Prompt_Only + ")";
         private object _sendLock = new object();
 
         private static DataTable _dataTranslation { get; set; } = null;
@@ -122,7 +122,7 @@ namespace Linux_Commander.common
                             break;
                         default:
                             if (ExtendedCommands())
-                                SendCommand(_lastCommand, !Log.IsInputRequest);
+                                SendCommand(Command_Prompt_Question, _lastCommand, !Log.IsInputRequest);
                             break;
                     }
                 }
@@ -303,7 +303,7 @@ namespace Linux_Commander.common
         /// <returns></returns>
         private bool SendCommand(string command, bool displayResults = true, int timeOutSec = 10, int minWaitSec = 0)
         {
-            return SendCommand(Command_Prompt_Question, command, displayResults, timeOutSec, minWaitSec);
+            return SendCommand(Command_Prompt_Only, command, displayResults, timeOutSec, minWaitSec);
         }
 
         /// <summary>
@@ -838,42 +838,42 @@ namespace Linux_Commander.common
 
             Log.Verbose($"{General.PadString("[ .. ] Installing Python3.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand(Command_Prompt_Only, "sudo yum install python3-pip", false, 60))
+            if (SendCommand("sudo yum install python3-pip", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Downloading get-pip.py.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand(Command_Prompt_Only, "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py", false, 60))
+            if (SendCommand("curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Installing PIP.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand(Command_Prompt_Only, "python3 get-pip.py", false, 60))
+            if (SendCommand("python3 get-pip.py", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Installing pexpect for python.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand(Command_Prompt_Only, "pip install pexpect", false, 30))
+            if (SendCommand("pip install pexpect", false, 30))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] PIP Installing Ansible.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand(Command_Prompt_Only, "pip install ansible", false, 90))
+            if (SendCommand("pip install ansible", false, 90))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Deleting get-pip.py.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand(Command_Prompt_Only, "rm -f get-pip.py", false))
+            if (SendCommand("rm -f get-pip.py", false))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
@@ -933,7 +933,7 @@ namespace Linux_Commander.common
         private static void ThreadProc(string expect, TimeSpan timeOut)
         {
 
-            var promptRegex = new Regex(expect);
+            var promptRegex = new Regex(expect, RegexOptions.Compiled);
 
             try
             {

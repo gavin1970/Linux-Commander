@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -161,6 +162,7 @@ namespace Linux_Commander.common
             //from this JSON and recreated it, when called apon. 
             //This ensures any new commands to be displayed as well.
             DeleteInternalCommandsHelp();
+            SyncTranslationData();
 
             return retVal;
         }
@@ -300,6 +302,49 @@ namespace Linux_Commander.common
             DataTable dt = ConfigData.GetTable(TABLE_NAMES.InternalCommands.ToString());
             if (dt != null)
                 ConfigData.DropTable(dt);
+        }
+
+        /// <summary>
+        /// At startup, we don't want to delete user commands, but we want to add any that might not be there, we created.
+        /// </summary>
+        internal static void SyncTranslationData()
+        {
+            //existing
+            DataTable dt = GetTranslationData();
+            //what we have configured.
+            DataTable confDt = GetTranslationData(true);
+
+            //only what we have configured that isn't in existing.
+            List<DataRow> diff = confDt.AsEnumerable().Where(r => !dt.AsEnumerable().Select(x => x["Typed"]).ToList().Contains(r["Typed"])).ToList();
+            if (diff.Count > 0)
+            {
+                //insert each of them into the table.
+                foreach (DataRow dr in diff)
+                    dt.Rows.Add(dr.ItemArray);
+
+                //update table and json file.
+                ConfigData.UpdateTable(dt);
+            }
+        }
+
+        /// <summary>
+        /// Not currently used, but figured I might need it in the future.
+        /// </summary>
+        /// <param name="dt1"></param>
+        /// <param name="dt2"></param>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
+        internal static DataTable GetMatchingData(DataTable dt1, DataTable dt2, string columnName)
+        {
+            DataTable dtMerged =
+                 (from a in dt1.AsEnumerable()
+                  join b in dt2.AsEnumerable()
+                  on a[columnName].ToString() equals b[columnName].ToString()
+                  into g
+                  where g.Count() > 0
+                  select a).CopyToDataTable();
+
+            return dtMerged;
         }
 
         /// <summary>
@@ -482,11 +527,11 @@ namespace Linux_Commander.common
         /// Load Transaction Data from memory or file if not already in memory.
         /// </summary>
         /// <returns></returns>
-        internal static DataTable GetTranslationData()
+        internal static DataTable GetTranslationData(bool refresh = false)
         {
             DataTable dt = ConfigData.GetTable(TABLE_NAMES.CommandTranslation.ToString());
 
-            if (dt == null || dt.Columns.Count == 0)
+            if (dt == null || dt.Columns.Count == 0 || refresh)
             {
                 dt = CreateTableHeaders(TABLE_NAMES.CommandTranslation, Defs.TranslationColumnNames);
 
@@ -497,6 +542,14 @@ namespace Linux_Commander.common
                 dr["Options"] = "";
                 dr["Description"] = "Corrects 'cd..' which will fail.";
                 dr["Usage"] = "cd..";
+                dt.Rows.Add(dr);
+
+                dr = dt.NewRow();
+                dr["Typed"] = "datetime";
+                dr["ChangeTo"] = "timedatectl";
+                dr["Options"] = "";
+                dr["Description"] = "Display Date, Time, and Timezone information.";
+                dr["Usage"] = "datetime";
                 dt.Rows.Add(dr);
 
                 dr = dt.NewRow();
@@ -555,7 +608,8 @@ namespace Linux_Commander.common
                 dr["Usage"] = "del * -=[Deletes all files and folders.;del [FOLDER] -=[Delete a folder.;del [FILENAME] -=[Delete a file.";
                 dt.Rows.Add(dr);
 
-                ConfigData.UpdateTable(dt);
+                if(!refresh)
+                    ConfigData.UpdateTable(dt);
             }
 
             return dt;

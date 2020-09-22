@@ -319,6 +319,7 @@ namespace Linux_Commander.common
         {
             bool retVal = true;
             bool pwd = false;
+            Thread t = null;
             //we don't want during DST changes, to mess this up.
             DateTime startTime = DateTime.UtcNow;
 
@@ -352,7 +353,7 @@ namespace Linux_Commander.common
                     TransComplete.Reset();
 
                     //we had an issue with timeout, not working with expect.  This is why we thread it.
-                    Thread t = new Thread(() => ThreadProc(expect, TimeSpan.FromSeconds(timeOutSec)));
+                    t = new Thread(() => ThreadProc(expect, TimeSpan.FromSeconds(timeOutSec)));
                     t.Start();
 
                     DateTime endTime = startTime;
@@ -367,16 +368,22 @@ namespace Linux_Commander.common
                         endTime = DateTime.UtcNow;
                         TransComplete.Reset();
                     }
-
-                    //lets wait until thread closes property.
-                    while (t != null && t.IsAlive)
-                        Thread.Sleep(10);
                 }
                 catch (Exception ex)
                 {
                     if (!ex.Message.Contains("Thread abort"))
                         Log.Error($"Exception: - {ex.Message}", 1);
                     retVal = false;
+                }
+                finally
+                {
+                    if (t != null && t.IsAlive)
+                    {
+                        //lets give it one more second to closes property.
+                        TransComplete.WaitOne(TimeSpan.FromSeconds(1));
+                        if (t != null && t.IsAlive)
+                            t.Abort();
+                    }
                 }
             }
 
@@ -831,42 +838,42 @@ namespace Linux_Commander.common
 
             Log.Verbose($"{General.PadString("[ .. ] Installing Python3.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("sudo yum install python3-pip", false, 60))
+            if (SendCommand(Command_Prompt_Only, "sudo yum install python3-pip", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Downloading get-pip.py.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py", false, 60))
+            if (SendCommand(Command_Prompt_Only, "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Installing PIP.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("Successfully installed", "python3 get-pip.py", false, 60))
+            if (SendCommand(Command_Prompt_Only, "python3 get-pip.py", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Installing pexpect for python.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("pip install pexpect", false, 30))
+            if (SendCommand(Command_Prompt_Only, "pip install pexpect", false, 30))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] PIP Installing Ansible.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("(Successfully built ansible|satisfied: pycparser)", "pip install ansible", false, 90))
+            if (SendCommand(Command_Prompt_Only, "pip install ansible", false, 90))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Deleting get-pip.py.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("rm -f get-pip.py", false))
+            if (SendCommand(Command_Prompt_Only, "rm -f get-pip.py", false))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);

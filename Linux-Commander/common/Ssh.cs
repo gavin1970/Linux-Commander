@@ -18,8 +18,8 @@ namespace Linux_Commander.common
         //  what is your name?
         //  [root@localhost ~]#
         //  [root@localhost ~]$
-        const string Command_Prompt_Only = @"[$#]|\[.*@(.*?)\][$%#]";
-        const string Command_Question_Only = @".*\?:|.*\[y/N\]/g|.*\[Y/n\]/g";
+        const string Command_Prompt_Only = @"[$#]|\[.+@(.+?)\][$%#]";
+        const string Command_Question_Only = @".+\?:|.+\[y/N\]/g|.+\[Y/n\]/g";
         const string Command_Prompt_Question = "(?:" + Command_Question_Only + ")|(?:" + Command_Prompt_Only + ")";
         private object _sendLock = new object();
 

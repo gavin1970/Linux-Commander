@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Linux_Commander.common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -212,7 +213,10 @@ public class Log
                     }
                     else
                     {
-                        if (IsInputRequest && msg.Contains("?:"))
+                        //ensure this part of the message is the input request.
+                        var inputRequest = Regex.Matches(msg, Defs.Command_Input_Request);
+
+                        if (IsInputRequest && inputRequest.Count > 0)
                         {
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             lineBreak = false;

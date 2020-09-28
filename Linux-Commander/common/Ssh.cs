@@ -12,15 +12,7 @@ namespace Linux_Commander.common
 {
     class Ssh
     {
-        //Looks for ?: just in case there is a prompt.   
-        //Also looks for [user@server ~]# or [user@server ~]$
-        //will pick up :
-        //  what is your name?
-        //  [root@localhost ~]#
-        //  [root@localhost ~]$
-        const string Command_Prompt_Only = @"[$#]|\[.+@(.+?)\][$%#]";
-        const string Command_Question_Only = @".+\?:|.+\[y/N\]/g|.+\[Y/n\]/g";
-        const string Command_Prompt_Question = "(?:" + Command_Question_Only + ")|(?:" + Command_Prompt_Only + ")";
+        const int _defaultCommandTimeout = 10;
         private object _sendLock = new object();
 
         private static DataTable _dataTranslation { get; set; } = null;
@@ -87,7 +79,7 @@ namespace Linux_Commander.common
                     Log.Verbose($"[{Defs.UserName}@{Defs.HostNameShort} {Defs.PromptsRemoteDir}]$ ", Log.Prompt, false);
                 }
                 else if (!Log.IsInputRequest)
-                    Log.Verbose($"{Defs.UserServer} ", Log.Prompt, false);
+                    Log.Verbose(Defs.UserServer, Log.Prompt, false);
 
                 _lastCommand = Console.ReadLine();
 
@@ -122,7 +114,7 @@ namespace Linux_Commander.common
                             break;
                         default:
                             if (ExtendedCommands())
-                                SendCommand(Command_Prompt_Question, _lastCommand, !Log.IsInputRequest);
+                                SendCommand(Defs.Command_Prompt_Or_Input, _lastCommand, !Log.IsInputRequest);
                             break;
                     }
                 }
@@ -301,9 +293,9 @@ namespace Linux_Commander.common
         /// <param name="timeOutSec"></param>
         /// <param name="minWaitSec"></param>
         /// <returns></returns>
-        private bool SendCommand(string command, bool displayResults = true, int timeOutSec = 10, int minWaitSec = 0)
+        private bool SendCommand(string command, bool displayResults = true, int timeOutSec = _defaultCommandTimeout, int minWaitSec = 0)
         {
-            return SendCommand(Command_Prompt_Only, command, displayResults, timeOutSec, minWaitSec);
+            return SendCommand(Defs.Command_Prompt_Or_Input, command, displayResults, timeOutSec, minWaitSec);
         }
 
         /// <summary>
@@ -315,7 +307,7 @@ namespace Linux_Commander.common
         /// <param name="timeOutSec"></param>
         /// <param name="minWaitSec"></param>
         /// <returns></returns>
-        private bool SendCommand(string expect, string command, bool displayResults = true, int timeOutSec = 10, int minWaitSec = 0)
+        private bool SendCommand(string expect, string command, bool displayResults = true, int timeOutSec = _defaultCommandTimeout, int minWaitSec = 0)
         {
             bool retVal = true;
             bool pwd = false;
@@ -367,6 +359,14 @@ namespace Linux_Commander.common
 
                         endTime = DateTime.UtcNow;
                         TransComplete.Reset();
+
+                        if(Log.IsInputRequest)
+                        {
+                            _lastCommand = Console.ReadLine();
+                            endTime = startTime;
+                            t = new Thread(() => ThreadProc(expect, TimeSpan.FromSeconds(timeOutSec)));
+                            t.Start();
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -523,7 +523,7 @@ namespace Linux_Commander.common
                 string date = DateTime.Now.ToString("dd MMM yyyy HH:mm:ss");
                 _lastCommand = $"date -s \"{date}\"";
 
-              /*
+                /*
                 //I've commented this all out as even after filling out prompts, it never gets a response that it ended.
                 string aboutServer = GetHostInfo();
                 //tzdata is for Red Hat Linux, this includes CentOS.
@@ -538,12 +538,12 @@ namespace Linux_Commander.common
                         Log.Verbose("y");
                         Log.Verbose("There will be a couple of prompts that pop up, Press Y and Enter to continue the install.");
                         _lastCommand = "yum install tzdata";
-                        //SendCommand(Command_Prompt_Question, _lastCommand, false);
-                        SendCommand(_lastCommand, false);                       
+                        SendCommand("(Complete!$)", _lastCommand, false);
                     }
                     else
                         Log.Verbose("N");
-                }*/
+                }
+                /**/
             }
             else if (command[0].Equals("recon"))
             {
@@ -852,7 +852,7 @@ namespace Linux_Commander.common
 
             Log.Verbose($"{General.PadString("[ .. ] Installing PIP.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("python3 get-pip.py", false, 60))
+            if (SendCommand("!!Successfully", "python3 get-pip.py", false, 60))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
@@ -866,14 +866,14 @@ namespace Linux_Commander.common
 
             Log.Verbose($"{General.PadString("[ .. ] PIP Installing Ansible.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("pip install ansible", false, 90))
+            if (SendCommand("!!Successfully", "pip install ansible", false, 90))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
             Log.Verbose($"{General.PadString("[ .. ] Deleting get-pip.py.", 30)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("rm -f get-pip.py", false))
+            if (SendCommand("rm -f get-pip.py", false, 10))
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
@@ -933,6 +933,11 @@ namespace Linux_Commander.common
         private static void ThreadProc(string expect, TimeSpan timeOut)
         {
 
+            if (!expect.StartsWith("!!") && expect != Defs.Command_Prompt_Or_Input)
+                expect += "|" + Defs.Command_Prompt_Or_Input;
+            else if (expect.StartsWith("!!"))
+                expect = expect.Substring(2, expect.Length - 2);
+
             var promptRegex = new Regex(expect, RegexOptions.Compiled);
 
             try
@@ -948,13 +953,13 @@ namespace Linux_Commander.common
                 _shellStream.WriteLine(_lastCommand);
                 var output = _shellStream.Expect(promptRegex, timeOut);
 
-                while (_shellStream.DataAvailable)
+                while (_shellStream.DataAvailable || !string.IsNullOrWhiteSpace(output))
                 {
                     string data = _shellStream.Read();
 
                     //if output is null or empty, and data has info, use it instead.
-                    if (string.IsNullOrWhiteSpace(output) && !string.IsNullOrWhiteSpace(data))
-                        output = data;
+                    if (output != null && data != null && data.Length > 0)
+                        output += $"{Environment.NewLine}{data}";
 
                     //lets look for something specific
                     var matches = Regex.Matches(output, expect);
@@ -962,18 +967,21 @@ namespace Linux_Commander.common
 
                     foreach (Match match in matches)
                     {
-                        if (match.ToString().Length > 1)
+                        //pull only prompts
+                        var commandPrompt = Regex.Matches(match.ToString(), Defs.Command_Prompt_Only);
+                        //pull only input request
+                        var inputRequest = Regex.Matches(match.ToString(), Defs.Command_Input_Request);
+
+                        //if command prompt
+                        if (commandPrompt.Count > 0)
                         {
                             Defs.UserServer = match.ToString();
                             output = output.Replace(Defs.UserServer, "");
                         }
-                        else if (match.ToString().Contains("?"))
+                        //if input request
+                        else if (inputRequest.Count > 0)
                             Log.IsInputRequest = true;
                     }
-
-                    var questionPrompt = Regex.Matches(output, Command_Question_Only);
-                    if (questionPrompt.Count > 0)
-                        Log.IsInputRequest = true;
 
                     //looking for a bunch of ******* and trim it down to a max of 75 bytes.
                     //this is something ansible ymls return with the use of ansible-playbook.
@@ -1015,7 +1023,7 @@ namespace Linux_Commander.common
                     Log.Error(ex.Message);
             }
 
-            _displayResults = false;
+            //_displayResults = false;
             TransComplete.Set();
         }
     }

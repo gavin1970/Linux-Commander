@@ -62,6 +62,7 @@
     <Compile Include="common\json\JSONWorker.cs" />
     <Compile Include="common\logger\Log.cs" />
     <Compile Include="common\Processor.cs" />
+    <Compile Include="common\spinner\ConsoleSpinner.cs" />
     <Compile Include="common\Ssh.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

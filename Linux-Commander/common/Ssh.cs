@@ -3,8 +3,10 @@ using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -834,49 +836,73 @@ namespace Linux_Commander.common
         /// </summary>
         private void InstallAnsibleWithPIP()
         {
+            bool retVal;
+            ConsoleSpinner spinner = new ConsoleSpinner()
+            {
+                SpinColor = ConsoleColor.Yellow,
+                SpinnerSpeed_ms = 100,
+                HideCursor = true,
+            };
+
             General.ApplicationHeader(true);
+            Log.Verbose("Some of these might timeout.  Depends on the speed of the harddrive, memory, cpu, etc.  This doesn't mean it didn't work, only means it took longer than expected.", ConsoleColor.Cyan, true, false, 45);
 
-            Log.Verbose($"{General.PadString("[ .. ] Installing Python3.", 30)}", ConsoleColor.White, false);
+            Log.Verbose($"{General.PadString("[ .. ] Installing Python3.", 45)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("sudo yum install python3-pip", false, 60))
+            spinner.Start();
+            retVal = SendCommand("sudo yum install python3-pip", false, 60);
+            spinner.Stop();
+            if (retVal)
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
-            Log.Verbose($"{General.PadString("[ .. ] Downloading get-pip.py.", 30)}", ConsoleColor.White, false);
+            Log.Verbose($"{General.PadString("[ .. ] Downloading get-pip.py.", 45)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py", false, 60))
+            spinner.Start();
+            retVal = SendCommand("curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py", false, 60);
+            spinner.Stop();
+            if (retVal)
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
-            Log.Verbose($"{General.PadString("[ .. ] Installing PIP.", 30)}", ConsoleColor.White, false);
+            Log.Verbose($"{General.PadString("[ .. ] Installing PIP.", 45)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("!!Successfully", "python3 get-pip.py", false, 60))
+            spinner.Start();
+            retVal = SendCommand("!!Successfully", "python3 get-pip.py", false, 60);
+            spinner.Stop();
+            if (retVal)
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
-            Log.Verbose($"{General.PadString("[ .. ] Installing pexpect for python.", 30)}", ConsoleColor.White, false);
+            Log.Verbose($"{General.PadString("[ .. ] Installing pexpect for python.", 45)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("pip install pexpect", false, 30))
+            spinner.Start();
+            retVal = SendCommand("pip install pexpect", false, 30);
+            spinner.Stop();
+            if (retVal)
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
-            Log.Verbose($"{General.PadString("[ .. ] PIP Installing Ansible.", 30)}", ConsoleColor.White, false);
+            Log.Verbose($"{General.PadString("[ .. ] PIP Installing Ansible.", 45)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("!!Successfully", "pip install ansible", false, 90))
+            spinner.Start();
+            retVal = SendCommand("!!Successfully", "pip install ansible", false, 120);
+            spinner.Stop();
+            if (retVal)
                 Log.Verbose(0, $"OK", ConsoleColor.Green);
             else
                 Log.Verbose(0, $"TO", ConsoleColor.Red);
 
-            Log.Verbose($"{General.PadString("[ .. ] Deleting get-pip.py.", 30)}", ConsoleColor.White, false);
+            Log.Verbose($"{General.PadString("[ .. ] Cleanup...", 45)}", ConsoleColor.White, false);
             Console.CursorLeft = 3;
-            if (SendCommand("rm -f get-pip.py", false, 10))
-                Log.Verbose(0, $"OK", ConsoleColor.Green);
-            else
-                Log.Verbose(0, $"TO", ConsoleColor.Red);
+            spinner.Start();
+            SendCommand(Defs.Command_Prompt_Only, "rm -f get-pip.py", false, 5);
+            spinner.Stop();
+            Log.Verbose(0, $"OK", ConsoleColor.Green);
 
             Log.Verbose("Finished..\n", ConsoleColor.White);
             Log.Verbose("Press any key to continue...", ConsoleColor.White);
@@ -933,7 +959,7 @@ namespace Linux_Commander.common
         private static void ThreadProc(string expect, TimeSpan timeOut)
         {
 
-            if (!expect.StartsWith("!!") && expect != Defs.Command_Prompt_Or_Input)
+            if (!expect.StartsWith("!!") && Defs.Command_Prompt_Or_Input.IndexOf(expect) == -1)
                 expect += "|" + Defs.Command_Prompt_Or_Input;
             else if (expect.StartsWith("!!"))
                 expect = expect.Substring(2, expect.Length - 2);
@@ -944,7 +970,7 @@ namespace Linux_Commander.common
             {
                 //clear data that might still be in the stream from last time.
                 while (_shellStream.DataAvailable)
-                    _shellStream.Read();
+                    Debug.WriteLine($"In buffer: {_shellStream.Read()}");
 
                 //clear all buffers from underlying device.
                 _shellStream.Flush();
@@ -953,14 +979,9 @@ namespace Linux_Commander.common
                 _shellStream.WriteLine(_lastCommand);
                 var output = _shellStream.Expect(promptRegex, timeOut);
 
-                while (_shellStream.DataAvailable || !string.IsNullOrWhiteSpace(output))
+                //when output is null, no data is available. 
+                while (output != null)
                 {
-                    string data = _shellStream.Read();
-
-                    //if output is null or empty, and data has info, use it instead.
-                    if (output != null && data != null && data.Length > 0)
-                        output += $"{Environment.NewLine}{data}";
-
                     //lets look for something specific
                     var matches = Regex.Matches(output, expect);
                     Log.IsInputRequest = false;
@@ -975,8 +996,11 @@ namespace Linux_Commander.common
                         //if command prompt
                         if (commandPrompt.Count > 0)
                         {
-                            Defs.UserServer = match.ToString();
-                            output = output.Replace(Defs.UserServer, "");
+                            //the use of "cat" in linux, sometimes returns a '# ', causing 
+                            //us to think the prompt is legacy and set it to #.
+                            if (Defs.UserServer.Length < 3 || match.ToString().Length > 2)
+                                Defs.UserServer = match.ToString();
+                            output = output.Replace(match.ToString(), "");
                         }
                         //if input request
                         else if (inputRequest.Count > 0)
@@ -1014,7 +1038,10 @@ namespace Linux_Commander.common
                     else
                         Defs.DataContent.Append(output);
 
-                    output = "";
+                    if (_shellStream.DataAvailable)
+                        output = _shellStream.Read();
+                    else
+                        output = null;
                 }
             }
             catch (Exception ex)

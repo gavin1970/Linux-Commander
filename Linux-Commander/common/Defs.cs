@@ -113,16 +113,19 @@ namespace Linux_Commander.common
 
         /// <summary>
         /// Looks for ': ' on end of string just in case there are any prompts.
-        /// Looks for # or $, which are legacy command line request.
+        /// Looks for '# ' or '$ ', which are legacy command line request.
         /// will pick up :
-        ///     [root@localhost ~]#
-        ///     [root@localhost ~]$
+        ///     [root@localhost ~]# 
+        ///     [root@localhost ~]$ 
         /// </summary>
         //internal static string Command_Input_Request = @".+\?:|.+\[y/N\]/g|.+\[Y/n\]/g";
-        //internal static string Command_Prompt_Only { get; } = @"[$#]|\[.+@(.+?)\][$%#]";
-        internal static string Command_Prompt_Only { get; } = @".+[\$\%\#] $";
-        internal static string Command_Input_Request { get; } = @".+\: $";
-        internal static string Command_Prompt_Or_Input { get; } = "(?:" + Command_Input_Request + ")|(?:" + Command_Prompt_Only + ")";
+        //internal static string Command_Prompt_Only { get; } = @"[\$#]|\[.+@(.+?)\][\$%#]";
+        //internal static string Command_Prompt_Only { get; } = @"([.+@(.+?)\][\$%#] $)|(.+[\$\%\#] $)";
+        //internal static string Command_Prompt_Only { get; } = @"(\[.+@(.+?)\][\$%#] $|[\$#] $)";
+        //internal static string Command_Prompt_Only { get; } = @"(.+[\$\%\#] $)";
+        internal static string Command_Prompt_Only { get; } = @"(\[.+@(.+?)\][\$%#] $|[\$#] $)";
+        internal static string Command_Input_Request { get; } = @"(.+\: $)";
+        internal static string Command_Prompt_Or_Input { get; } = $"{Command_Input_Request}|{Command_Prompt_Only}";
         internal static int Port { get; set; } = 22;
         internal static int[] CurrentCursor { get; set; } = new int[] { 0, 0 };
         internal static bool RequiresDirLookup { get; set; } = false;

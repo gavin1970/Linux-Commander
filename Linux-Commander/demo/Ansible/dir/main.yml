@@ -18,7 +18,8 @@
       with_items:
         - "{{ whitelist_dir }}"
 
-    - fail:
+    - name: Fail Testing
+      fail:
         msg: "Directory root must be: {{ item }}"
       when: not dir|string|regex_search(item)
       with_items:
@@ -35,11 +36,20 @@
         - "{{ whitelist_dir }}"
       ignore_errors: yes
 
-    - name: Assert test
+    - name: Assert to Fail
       assert:
         that:
           - my_param <= 100
           - my_param >= 0
         success_msg: "my_param '{{ my_param }}' is between 0 and 100"
         fail_msg: "my_param '{{ my_param }}' must be between 0 and 100"
+      ignore_errors: yes
+
+    - name: Assert to Success
+      assert:
+        that:
+          - my_param >= 100
+          - my_param <= 200
+        success_msg: "my_param '{{ my_param }}' is between 100 and 200"
+        fail_msg: "my_param '{{ my_param }}' must be between 100 and 200"
       ignore_errors: yes

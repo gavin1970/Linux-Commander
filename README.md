@@ -6,6 +6,9 @@ It has Ansible installation "install-ansible" and validation process with Ansibl
 To find out more about how to run ansible at home, check out this this page I setup for how I'm doing it.
 http://www.chizl.com/ansible/
 
+## Linux Commander Connecting to Linux
+<a href="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/LinuxCommander05.png"/>
+
 ## Linux Commander Help Screen
 
 	            ###   ###   ###  #########  ###        ##########   ###

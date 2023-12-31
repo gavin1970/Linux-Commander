@@ -1,0 +1,92 @@
+{
+  "Configuration": [
+    {
+      "ConnectionTimeoutSec": "10",
+      "TextEditor": "notepad.exe",
+      "DirectoryColor": "Green",
+      "StickyColor": "Cyan",
+      "FullPermissionsBGColor": "Red",
+      "FullPermissionsFGColor": "White",
+      "BlockSpecialFileColor": "DarkYellow",
+      "CharacterSpecialFileColor": "DarkMagenta",
+      "SymbolicLinkColor": "Yellow",
+      "PromptColor": "DarkGreen",
+      "AvailableColors": "Black, DarkBlue, DarkGreen, DarkCyan, DarkRed, DarkMagenta, DarkYellow, Gray, DarkGray, Blue, Green, Cyan, Red, Magenta, Yellow, White"
+    }
+  ],
+  "CommandTranslation": [
+    {
+      "Typed": "cd..",
+      "ChangeTo": "cd ..",
+      "Options": "",
+      "Description": "Corrects 'cd..' which will fail.",
+      "Usage": "cd.."
+    },
+    {
+      "Typed": "datetime",
+      "ChangeTo": "timedatectl",
+      "Options": "",
+      "Description": "Display Date, Time, and Timezone information.",
+      "Usage": "datetime"
+    },
+    {
+      "Typed": "cd/",
+      "ChangeTo": "cd /",
+      "Options": "",
+      "Description": "Corrects 'cd/' which will fail.",
+      "Usage": "cd/"
+    },
+    {
+      "Typed": "dir",
+      "ChangeTo": "ls",
+      "Options": "-ltr",
+      "Description": "Windows command shortcut.",
+      "Usage": "dir -=[Uses default options above;dir -altr -=[Uses only what you pass"
+    },
+    {
+      "Typed": "co",
+      "ChangeTo": "sudo chown",
+      "Options": "",
+      "Description": "Linux shortcut for change owner.",
+      "Usage": "co [USER]:[GROUP] [[DIRECTORY]|[FILE]]"
+    },
+    {
+      "Typed": "md",
+      "ChangeTo": "mkdir",
+      "Options": "",
+      "Description": "Windows command shortcut.",
+      "Usage": "md [OPTIONS] [DIRECTORY_NAME]"
+    },
+    {
+      "Typed": "ap",
+      "ChangeTo": "ansible-playbook",
+      "Options": "",
+      "Description": "Linux shortcut for ansible command.",
+      "Usage": "ap [OPTIONS] [YAML_FILENAME]"
+    },
+    {
+      "Typed": "rd",
+      "ChangeTo": "rmdir",
+      "Options": "",
+      "Description": "Windows command shortcut.",
+      "Usage": "rd /ME/SubFolder"
+    },
+    {
+      "Typed": "del",
+      "ChangeTo": "rm",
+      "Options": "-f -r",
+      "Description": "Windows command shortcut.",
+      "Usage": "del * -=[Deletes all files and folders.;del [FOLDER] -=[Delete a folder.;del [FILENAME] -=[Delete a file."
+    }
+  ],
+  "HostHistory": [
+    {
+      "HostID": "01",
+      "HostName": "192.168.247.128",
+      "UserName": "root",
+      "LocalPath": "C:\\Code\\Linux-Commander\\Linux-Commander\\bin\\Debug",
+      "RemotePath": "/root",
+      "Environment": ""
+    }
+  ]
+}

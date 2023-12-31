@@ -116,8 +116,8 @@ http://www.chizl.com/ansible/
 	  ---------------------------------------------------------------------------
 
 -=[ USER COMMANDS ]=-
-	Can be edited or added to here: 
-	...\Linux-Commander\Data\Linux Commander.json
+Can be edited or added.  On startup Linux Commander will auto create then you can edit it. 
+Example: <a href="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/Linux%20Commander.json">Linux Commander.json</a>
 
 	  ap:                           Linux shortcut for ansible command.
 	                                Translates To: ansible-playbook

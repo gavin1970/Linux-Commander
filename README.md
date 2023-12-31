@@ -7,7 +7,7 @@ To find out more about how to run ansible at home, check out this this page I se
 http://www.chizl.com/ansible/
 
 ## Linux Commander Connecting to Linux
-<a href="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/LinuxCommander05.png"/>
+<img src="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/LinuxCommander05.png" alt="Example 1"/>
 
 ## Linux Commander Help Screen
 

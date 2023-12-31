@@ -116,7 +116,7 @@ http://www.chizl.com/ansible/
 	  ---------------------------------------------------------------------------
 
 -=[ USER COMMANDS ]=-
-Can be edited or added.  On startup Linux Commander will auto create then you can edit it. 
+Can be edited or added.  On startup Linux Commander will auto create then you can edit it.   This also will alloow you to edit colors for response data from Linux.
 Example: <a href="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/Linux%20Commander.json">Linux Commander.json</a>
 
 	  ap:                           Linux shortcut for ansible command.

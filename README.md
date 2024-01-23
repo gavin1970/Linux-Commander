@@ -6,6 +6,9 @@ It has Ansible installation "install-ansible" and validation process with Ansibl
 To find out more about how to run ansible at home, check out this this page I setup for how I'm doing it.
 http://www.chizl.com/ansible/
 
+## Linux Commander Connecting to Linux
+<img src="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/LinuxCommander05.png" alt="Example 1"/>
+
 ## Linux Commander Help Screen
 
 	            ###   ###   ###  #########  ###        ##########   ###
@@ -113,8 +116,8 @@ http://www.chizl.com/ansible/
 	  ---------------------------------------------------------------------------
 
 -=[ USER COMMANDS ]=-
-	Can be edited or added to here: 
-	...\Linux-Commander\Data\Linux Commander.json
+Can be edited or added.  On startup Linux Commander will auto create then you can edit it.   This also will alloow you to edit colors for response data from Linux.
+Example: <a href="https://github.com/gavin1970/Linux-Commander/blob/master/Linux-Commander/imgs/Linux%20Commander.json">Linux Commander.json</a>
 
 	  ap:                           Linux shortcut for ansible command.
 	                                Translates To: ansible-playbook

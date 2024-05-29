@@ -581,7 +581,7 @@ namespace Linux_Commander.common
             else if (command[0].Equals("whereami"))
             {
                 //display some information of server, port and curent directory.
-                bool more = _lastCommand.IndexOf("--more") > -1 ? true : false;
+                bool more = _lastCommand.IndexOf("--more") > -1;
                 SendCommand("pwd", false);
                 Log.Verbose($"{General.PadString("Server: ", 20, true)}", ConsoleColor.Cyan, false);
                 Log.Verbose(0, $"{Defs.HostName}", ConsoleColor.DarkYellow);
